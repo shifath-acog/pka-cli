@@ -1,0 +1,33 @@
+Here is a breakdown of the 9 steps in the pKa calculation pipeline:
+
+Step 1: Define Inputs
+This initial step sets up the calculation. Key parameters are defined here:
+- inp_smiles: The SMILES string, a text representation of the molecule to be analyzed (e.g., "C1=CC=C(C=C1)C(=O)O" for benzoic acid).
+- dielectric_value: The dielectric constant of the solvent (e.g., water, DMSO) in which the pKa is being calculated.
+- output_dir: The name of the directory where all output files for this molecule will be saved.
+
+Step 2: Generate 3D Conformers
+The 2D SMILES string is used to generate a large number of potential 3D structures, or "conformers," of the molecule. This is done using a computational chemistry tool called RDKit, which explores the molecule's rotatable bonds to create a diverse ensemble of possible shapes.
+
+Step 3: Optimize and Filter Conformers
+The initial 3D structures from Step 2 are refined.
+- Optimization: A relatively fast energy minimization method (MMFF - Merck Molecular Force Field) is applied to each conformer to correct any strange bond lengths or angles, resulting in more physically realistic shapes.
+- Filtering: The optimized structures are checked for geometric feasibility. Any conformers that have changed their fundamental connectivity or have unrealistic structures after optimization are discarded.
+
+Step 4: Calculate Pairwise RMSD
+For all the valid conformers, the pipeline calculates the Root Mean Square Deviation (RMSD) between every possible pair. RMSD is a measure of the average distance between the atoms of two superimposed structures. This creates a matrix where each entry represents how similar two 3D conformers are to each other. A low RMSD value means the two structures are very similar.
+
+Step 5: Hierarchical Clustering
+Using the RMSD matrix from the previous step, the conformers are grouped into clusters. Hierarchical clustering is an algorithm that groups similar objects together. In this case, it groups conformers with low RMSD values, ensuring that each cluster contains a set of structurally similar 3D shapes.
+
+Step 6: Select Cluster Representatives
+From each cluster, a single representative conformer is chosen. This is typically the conformer with the lowest energy (as calculated by the MMFF method in Step 3). This step is crucial for reducing the computational cost, as it narrows down the thousands of initial conformers to a small, manageable set of the most stable and structurally distinct shapes.
+
+Step 7: DFT Geometry Optimization (Neutral)
+The representative conformers are subjected to a much more accurate, but computationally expensive, geometry optimization using Density Functional Theory (DFT). This refines the 3D structure of each representative conformer in its neutral (uncharged) state within the specified solvent environment (using a model called PCM).
+
+Step 8: DFT Geometry Optimization (Charged)
+This step is similar to Step 7, but it is performed on the charged (deprotonated) form of the molecule. The pipeline first determines the most likely site of deprotonation (where the molecule will lose a proton) and then runs the same high-accuracy DFT/PCM optimization on this newly created charged species.
+
+Step 9: Calculate Final pKa
+The final energies of the optimized neutral (from Step 7) and charged (from Step 8) molecules are used to calculate the Gibbs free energy of the deprotonation reaction. This energy value is then plugged into a thermodynamic equation along with the known energy of a solvated proton to compute the final pKa value.

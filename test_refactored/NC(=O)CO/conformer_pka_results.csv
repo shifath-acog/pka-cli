@@ -1,0 +1,6 @@
+Cluster_ID,Basis,XC,Filename_original,Energy_original,Filename_deprotonated,Energy_deprotonated,Filename_protonated,Energy_protonated,Weights,pka (acidic),pka (basic)
+1,aug-cc-pVDZ,M06-2X,rep_of_cluster_1_aug-cc-pVDZ_M06-2X.xyz,-178454.257068,rep_of_cluster_1_deprotonated.xyz,-178141.488937,,,0.18935816100265937,25.75010551821383,
+2,aug-cc-pVDZ,M06-2X,rep_of_cluster_2_aug-cc-pVDZ_M06-2X.xyz,-178453.968591,rep_of_cluster_2_deprotonated.xyz,-178141.480143,,,0.1163382334129853,25.545321625613347,
+3,aug-cc-pVDZ,M06-2X,rep_of_cluster_3_aug-cc-pVDZ_M06-2X.xyz,-178454.253947,rep_of_cluster_3_deprotonated.xyz,-178141.490431,,,0.18836281258171786,25.74672641518332,
+4,aug-cc-pVDZ,M06-2X,rep_of_cluster_4_aug-cc-pVDZ_M06-2X.xyz,-178454.430725,rep_of_cluster_4_deprotonated.xyz,-178136.744629,,,0.2538864801162008,29.35103949121423,
+5,aug-cc-pVDZ,M06-2X,rep_of_cluster_5_aug-cc-pVDZ_M06-2X.xyz,-178454.426436,rep_of_cluster_5_deprotonated.xyz,-178136.752304,,,0.25205431288643665,29.34227945041071,

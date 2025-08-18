@@ -1,0 +1,27 @@
+FROM dockerhub.aganitha.ai:4443/chem/pyscf:ovhv1
+#FROM dockerhub.aganitha.ai:4443/chem/pka_pipeline:ovh4
+
+RUN pip install numpy pandas scipy scikit-learn
+
+# Add repository and install Open Babel
+RUN apt-get update && apt-get install -y \
+    openbabel \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+
+# Copy atk conformer generation pipeline folder to /app in the container
+#COPY  atk_conformer_generation_pipeline /app/
+
+# Copy the current folder
+#COPY ./ /app/
+
+RUN pip install rdkit==2024.3.3
+RUN pip install --upgrade pip \
+    && pip install matplotlib==3.9.1 termcolor==2.3.0
+
+RUN pip install jupyterlab
+
+CMD ["jupyter-lab", "--ip=0.0.0.0", "--port=8888", "--allow-root", "--NotebookApp.token=''"]

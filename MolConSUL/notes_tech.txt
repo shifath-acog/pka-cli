@@ -1,0 +1,43 @@
+This document provides a more technical description of the computational pipeline used for pKa estimation.
+
+Step 1: Parameter Definition
+The pipeline is initialized with the following parameters:
+- inp_smiles: The canonical SMILES string representing the molecular graph.
+- dielectric_value: The static dielectric constant (epsilon) for the solvent, which is used to parameterize the Polarizable Continuum Model (PCM).
+- output_dir: A dedicated directory for storing all intermediate and final files for the specific calculation.
+
+Step 2: Conformer Ensemble Generation
+A diverse ensemble of 3D conformers is generated from the input SMILES string using the RDKit library. The specific algorithm employed is likely the Experimental-Torsion basic Knowledge Distance Geometry (ETKDG) method, which is a standard for producing physically reasonable initial geometries.
+
+Step 3: Force Field Optimization and Sanity Checks
+Each conformer in the initial ensemble undergoes geometry optimization using the Merck Molecular Force Field (MMFF94). This is a low-level, computationally inexpensive method to quickly relax the structures. After optimization, a sanity check is performed by converting the 3D structure back to a SMILES string and comparing its Tanimoto similarity to the original input SMILES. This ensures the molecular graph (connectivity) has not been altered during optimization. Structures that fail this check are discarded.
+
+Step 4: Pairwise RMSD Matrix Calculation
+The Open Babel command-line tool `obrms` is used to calculate the heavy-atom Root Mean Square Deviation (RMSD) between all pairs of the filtered, MMFF-optimized conformers. This generates a symmetric N x N matrix, where N is the number of conformers, which serves as the distance matrix for the subsequent clustering step.
+
+Step 5: Hierarchical Agglomerative Clustering
+The conformer ensemble is clustered based on structural similarity using the RMSD matrix as input. The algorithm is hierarchical agglomerative clustering with the 'ward' variance minimization linkage method. This method iteratively merges clusters to minimize the total within-cluster variance. The optimal number of clusters is determined by calculating the silhouette score for a range of cluster numbers and selecting the number that maximizes this score, ensuring a good balance between cluster separation and cohesion.
+
+Step 6: Selection of Cluster Representatives
+For each cluster, the conformer with the minimum MMFF94 energy is selected as the representative for that structural family. This reduces the set of thousands of conformers to a small number (equal to the number of clusters) of low-energy, structurally distinct representatives for the more computationally intensive DFT calculations.
+
+Step 7: DFT/PCM Geometry Optimization of the Neutral Species (HA)
+The selected representative conformers are optimized at a higher level of theory. The calculation uses Density Functional Theory (DFT) with the M06-2X exchange-correlation functional and the aug-cc-pVDZ basis set. Solvent effects are included implicitly using the Integral Equation Formalism for the Polarizable Continuum Model (IEF-PCM). The calculation is performed using the PySCF software package, accelerated with the gpu4pyscf library.
+
+Step 8: DFT/PCM Geometry Optimization of the Deprotonated Species (A-)
+A corresponding deprotonated structure is generated for each representative conformer. The molecular charge is adjusted (typically to -1), and the geometry is re-optimized using the same DFT/PCM method (M06-2X/aug-cc-pVDZ with IEF-PCM) as in the previous step. This yields the final energy of the conjugate base.
+
+Step 9: pKa Calculation
+The final pKa value is calculated from the Gibbs free energy of the deprotonation reaction in the solvent. The free energy change (ΔG_deprot) is approximated by the difference in the final electronic energies from the DFT calculations:
+
+ΔG_deprot ≈ E(A⁻) - E(HA)
+
+This value is then used in the thermodynamic relationship:
+
+pKa = (ΔG_deprot + ΔG_solv(H⁺)) / (RT * ln(10))
+
+Where:
+- E(A⁻) is the final DFT energy of the deprotonated species.
+- E(HA) is the final DFT energy of the neutral species.
+- ΔG_solv(H⁺) is the empirically determined Gibbs free energy of solvation for a proton in the specified solvent, which is provided as an input to the pipeline (E_avg_proton).
+- R is the ideal gas constant and T is the temperature (assumed to be 298.15 K).
