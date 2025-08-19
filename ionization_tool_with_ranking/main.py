@@ -1,3 +1,4 @@
+
 import os
 import sys
 from rdkit import Chem
@@ -10,7 +11,7 @@ from protodeproto.protonated import handle_protonated
 from protodeproto.fix_anionic import fix_anionic
 
 def extract_charge_info(sdf_path):
-    """Extracts formal charges from M  CHG lines in a .sdf file"""
+    """Extracts formal charges from M  CHG lines in the .sdf file"""
     with open(sdf_path) as f:
         for line in f:
             if line.startswith("M  CHG"):
@@ -50,12 +51,12 @@ def classify_by_charge(charges, sdf_path):
             no2_atoms.update(match)  # RDKit atom indices (0-based)
 
         # Convert CHG indices (1-based) to 0-based for comparison
-        filtered_pos = [i - 1 for i in pos]
-        filtered_neg = [i - 1 for i in neg]
+        pos_zero = [i - 1 for i in pos]
+        neg_zero = [i - 1 for i in neg]
 
         # Filter out NO2 atoms
-        filtered_pos = [i for i in filtered_pos if i not in no2_atoms]
-        filtered_neg = [i for i in filtered_neg if i not in no2_atoms]
+        filtered_pos = [i for i in pos_zero if i not in no2_atoms]
+        filtered_neg = [i for i in neg_zero if i not in no2_atoms]
 
         if filtered_pos and filtered_neg:
             return "zwitterionic"
@@ -119,7 +120,7 @@ def classify_by_charge(charges, sdf_path):
     else:
         return None
 
-def process_file(sdf_path, charge_path, output_dir):  # Edit 2
+def process_file(sdf_path, output_dir):
     base = os.path.splitext(os.path.basename(sdf_path))[0]
     charges = extract_charge_info(sdf_path)
     classification = classify_by_charge(charges, sdf_path)
@@ -129,20 +130,19 @@ def process_file(sdf_path, charge_path, output_dir):  # Edit 2
         return
 
     print(f"{base}.sdf classified as {classification}")
-    print(f"Classification for {base}.sdf: {classification}") # Debug print
 
     if classification == "acidic":
-        deprotonate_most_positive_oh_or_sh(sdf_path, charge_path, output_dir)  # Edit 3
+        deprotonate_most_positive_oh_or_sh(sdf_path, sdf_path.replace('.sdf', '.charge'), output_dir)
     elif classification == "deprotonate_basic":
-        deprotonate_most_positive_nh(sdf_path, charge_path, output_dir)  # Edit 3
+        deprotonate_most_positive_nh(sdf_path, sdf_path.replace('.sdf', '.charge'), output_dir)
     elif classification == "basic":
-        protonate_most_negative_nitrogen(sdf_path, charge_path, output_dir)  # Edit 3
+        protonate_most_negative_nitrogen(sdf_path, sdf_path.replace('.sdf', '.charge'), output_dir)
     elif classification == "ambiphilic":
-        handle_ambiphilic(sdf_path, charge_path, output_dir)  # Edit 3
+        handle_ambiphilic(sdf_path, sdf_path.replace('.sdf', '.charge'), output_dir)
     elif classification == "zwitterionic":
-        handle_zwitterionic(sdf_path, charge_path, output_dir)  # Edit 3
+        handle_zwitterionic(sdf_path, sdf_path.replace('.sdf', '.charge'), output_dir)
     elif classification == "protonated":
-        handle_protonated(sdf_path, charge_path, output_dir)  # Edit 3
+        handle_protonated(sdf_path, sdf_path.replace('.sdf', '.charge'), output_dir)
     elif classification == "anionic":
         fix_anionic(sdf_path, output_dir)
 
@@ -156,24 +156,17 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
 
     for file in os.listdir(input_dir):
-        if not file.endswith(".sdf") or file.endswith("_treated.sdf") or "_aug-cc-pVDZ_M06-2X.sdf" in file:
+        if not file.endswith(".sdf") or file.endswith("_treated.sdf"):
             continue
 
         sdf_path = os.path.join(input_dir, file)
-        charge_path = os.path.join(input_dir, file.replace(".sdf", "_aug-cc-pVDZ_M06-2X.charge"))
+        charge_path = sdf_path.replace(".sdf", ".charge")
 
-        try:
-            with open(charge_path, 'r') as f:
-                # File exists and is readable
-                pass
-        except FileNotFoundError:
-            print(f"Missing charge file for {file} (FileNotFoundError), skipping.")
-            continue
-        except Exception as e:
-            print(f"Error opening charge file {file}: {e}, skipping.")
+        if not os.path.exists(charge_path):
+            print(f"Missing charge file for {file}, skipping.")
             continue
 
-        process_file(sdf_path, charge_path, output_dir)
+        process_file(sdf_path, output_dir)
 
 if __name__ == "__main__":
     main()

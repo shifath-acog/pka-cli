@@ -84,7 +84,7 @@ def run_dft_calculation(cluster_reps_dir, dielectric_value, python_executable):
         raise
 
     # Renaming SDF files as per notebook workflow
-    basis_sets = ['aug-cc-pVDZ']
+    basis_sets = ['aug-cc-pVDZ'] #aug-cc-pVDZ
     xc_functionals = ['M06-2X']
 
     sdf_files = sorted(glob.glob(os.path.join(cluster_reps_dir, "*.sdf")))
