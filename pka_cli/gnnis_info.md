@@ -37,6 +37,11 @@ To run the GNNIS workflow, use the `gnnis` subcommand. Here are some examples:
 docker exec updated-pka bash -c 'PYTHONPATH=/work python3 /work/pka_cli/main.py gnnis --smiles "NC(=O)CO" --output_dir "cli-gnnis-test"'
 ```
 
+**Run with custom params:**
+```bash
+PYTHONPATH=/work:/work/ionization_tool_with_ranking python pka_cli/main.py gnnis   --smiles "NC(=O)CO"   --output_dir "cli-ethanol-gnnis-dmso"   --solvent_name "DMSO"   --dielectric 46.826   --num_confs 10   --e_avg_proton -275.755   --pka_exp 24.88
+```
+
 **Run with a different number of conformers:**
 
 *Note: The DFT calculation in the GNNIS workflow is memory-intensive. If you encounter out-of-memory errors, try reducing the number of conformers.* 
@@ -52,3 +57,4 @@ docker exec updated-pka bash -c 'PYTHONPATH=/work python3 /work/pka_cli/main.py 
 ```bash
 docker exec updated-pka bash -c 'PYTHONPATH=/work python3 /work/pka_cli/main.py gnnis --csv "path/to/your/file.csv" --output_dir "cli-gnnis-batch-test"'
 ```
+

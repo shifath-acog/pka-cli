@@ -101,8 +101,6 @@ def relaunch_in_gnnis_env(base_python_executable):
 # --- Main Application Logic ---
 def main():
     parser = argparse.ArgumentParser(description="pKa Estimation Pipeline CLI.")
-    # Add base_python_executable to the main parser so it's always available
-    parser.add_argument("--base_python_executable", type=str, help=argparse.SUPPRESS) # Hidden argument
     subparsers = parser.add_subparsers(dest="command", help="Available commands", required=True)
 
     # --- MolConSUL Command ---
@@ -127,6 +125,8 @@ def main():
     parser_gn.add_argument("--num_confs", type=int, default=10, help="Number of conformers to generate.")
     parser_gn.add_argument("--e_avg_proton", type=float, default=-277.60, help="Average proton energy E_H(solv) in kcal/mol.")
     parser_gn.add_argument("--pka_exp", type=float, default=0.0, help="Experimental pKa (optional).")
+    # Add base_python_executable to the gnnis sub-parser so it's recognized after re-launch
+    parser_gn.add_argument("--base_python_executable", type=str, help=argparse.SUPPRESS) # Hidden argument
 
     args = parser.parse_args()
 
