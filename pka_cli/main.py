@@ -128,6 +128,21 @@ def main():
     # Add base_python_executable to the gnnis sub-parser so it's recognized after re-launch
     parser_gn.add_argument("--base_python_executable", type=str, help=argparse.SUPPRESS) # Hidden argument
 
+    # --- GRT (TD+GNNIS+RDKit) Command ---
+    parser_grt = subparsers.add_parser("grt", help="Run the GRT (Torsional Diffusion + GNNIS + RDKit) ensemble workflow.")
+    grt_input_group = parser_grt.add_mutually_exclusive_group(required=True)
+    grt_input_group.add_argument("--smiles", type=str, help="Single SMILES string to process.")
+    grt_input_group.add_argument("--csv", type=str, help="Path to a CSV file with 'smiles' and 'id' columns.")
+    parser_grt.add_argument("--output_dir", type=str, default=".", help="Directory to save output files.")
+    parser_grt.add_argument("--solvent_name", type=str, default="tip3p", help="Name of the solvent for GNNIS (e.g., 'tip3p', 'DMSO').")
+    parser_grt.add_argument("--dielectric", type=float, default=46.826, help="Dielectric constant of the solvent for DFT.")
+    parser_grt.add_argument("--num_confs_td", type=int, default=200, help="Number of conformers for Torsional Diffusion.")
+    parser_grt.add_argument("--num_confs_gnnis", type=int, default=200, help="Number of conformers for GNNIS.")
+    parser_grt.add_argument("--num_confs_rdkit", type=int, default=100, help="Number of conformers for RDKit.")
+    parser_grt.add_argument("--e_avg_proton", type=float, default=-277.60, help="Average proton energy E_H(solv) in kcal/mol.")
+    parser_grt.add_argument("--pka_exp", type=float, default=0.0, help="Experimental pKa (optional).")
+    parser_grt.add_argument("--base_python_executable", type=str, help=argparse.SUPPRESS)
+
     args = parser.parse_args()
 
     # Determine the base_python_executable before any potential re-launch
@@ -141,13 +156,14 @@ def main():
     # Import workflow functions AFTER potential re-launch and environment check
     # This ensures that GNNIS-related imports only happen when in the correct env
     from utils.molconsul_helpers import run_molconsul_workflow
-    # Only import gnnis_helpers if the command is 'gnnis'
     if args.command == 'gnnis':
         from utils.gnnis_helpers import run_gnnis_workflow
+    if args.command == 'grt':
+        from utils.grt_helpers import run_grt_workflow
 
     container_base_path = "/work"
 
-    if args.command == "molconsul" or args.command == "gnnis":
+    if args.command in ["molconsul", "gnnis", "grt"]:
         main_output_dir = os.path.join(container_base_path, args.output_dir)
         os.makedirs(main_output_dir, exist_ok=True)
 
@@ -156,11 +172,15 @@ def main():
             workflow_func = run_molconsul_workflow
         elif args.command == "gnnis":
             workflow_func = run_gnnis_workflow
+        elif args.command == "grt":
+            workflow_func = run_grt_workflow
 
         if args.smiles:
             print(f"--- Running {args.command.upper()} for SMILES: {args.smiles} ---")
             molecule_output_dir = os.path.join(main_output_dir, args.smiles.replace('/', '_').replace('\\', '_'))
-            if args.command == 'gnnis':
+            
+            # Pass base python executable for gnnis and grt
+            if args.command in ['gnnis', 'grt']:
                 workflow_func(
                     smiles=args.smiles,
                     output_dir=molecule_output_dir,
@@ -189,7 +209,7 @@ def main():
                     
                     molecule_output_dir = os.path.join(main_output_dir, str(molecule_id))
                     
-                    if args.command == 'gnnis':
+                    if args.command in ['gnnis', 'grt']:
                         workflow_func(
                             smiles=smiles,
                             output_dir=molecule_output_dir,
