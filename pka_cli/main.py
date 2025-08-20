@@ -131,7 +131,8 @@ def main():
     args = parser.parse_args()
 
     # Determine the base_python_executable before any potential re-launch
-    base_python_executable = args.base_python_executable or sys.executable
+    # Use getattr for safe access, as this arg only exists for the gnnis command
+    base_python_executable = getattr(args, 'base_python_executable', None) or sys.executable
 
     # If the command is gnnis, ensure we are in the correct conda environment
     if args.command == 'gnnis' and not is_in_gnnis_env():
