@@ -1,0 +1,45 @@
+# pKa-Estimation CLI Test Commands
+# ---------------------------------
+# This file contains example commands to test the three different pKa estimation methods.
+# A sample 'batch_input.csv' file has been created for the CSV examples.
+
+# ==============================================================================
+# 1. MolConSUL Method (RDKit/MMFF)
+# ==============================================================================
+
+# Example 1a: Run with a single SMILES and default parameters.
+PYTHONPATH=/work python pka_cli/main.py molconsul --smiles "c1ccccc1O" --output_dir "cli-test-molconsul-default"
+
+# Example 1b: Run with a single SMILES and custom parameters.
+PYTHONPATH=/work python pka_cli/main.py molconsul --smiles "c1ccccc1O" --output_dir "cli-test-molconsul-custom" --num_confs 200 --dielectric 78.3 --pka_exp 9.95
+
+# Example 1c: Run a batch from a CSV file.
+PYTHONPATH=/work python pka_cli/main.py molconsul --csv "batch_input.csv" --output_dir "cli-test-molconsul-batch"
+
+
+# ==============================================================================
+# 2. GNNIS Method (Graph Neural Network)
+# ==============================================================================
+
+# Example 2a: Run with a single SMILES and default parameters.
+PYTHONPATH=/work python pka_cli/main.py gnnis --smiles "c1ccccc1O" --output_dir "cli-test-gnnis-default"
+
+# Example 2b: Run with a single SMILES and custom parameters.
+PYTHONPATH=/work python pka_cli/main.py gnnis --smiles "c1ccccc1O" --output_dir "cli-test-gnnis-custom" --num_confs 25 --solvent_name "DMSO" --pka_exp 9.95
+
+# Example 2c: Run a batch from a CSV file.
+PYTHONPATH=/work python pka_cli/main.py gnnis --csv "batch_input.csv" --output_dir "cli-test-gnnis-batch"
+
+
+# ==============================================================================
+# 3. GRT Method (Ensemble: GNNIS + RDKit + Torsional Diffusion)
+# ==============================================================================
+
+# Example 3a: Run with a single SMILES and default parameters.
+PYTHONPATH=/work python pka_cli/main.py grt --smiles "c1ccccc1O" --output_dir "cli-test-grt-default"
+
+# Example 3b: Run with a single SMILES and custom parameters (fewer conformers for a quicker test).
+PYTHONPATH=/work python pka_cli/main.py grt --smiles "c1ccccc1O" --output_dir "cli-test-grt-custom" --num_confs_td 10 --num_confs_gnnis 10 --num_confs_rdkit 10 --pka_exp 9.95
+
+# Example 3c: Run a batch from a CSV file.
+PYTHONPATH=/work python pka_cli/main.py grt --csv "batch_input.csv" --output_dir "cli-test-grt-batch"
